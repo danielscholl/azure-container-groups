@@ -1,0 +1,101 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+    "prefix": {
+        "type": "string",
+        "metadata": {
+          "description": "Small unique string."
+        },
+        "minLength": 2,
+        "maxLength": 9
+      },
+      "storageAccountType": {
+        "type": "string",
+        "metadata": {
+          "description": "Account type, premium vs standard, and local, global redundancy"
+        },
+        "allowedValues": [
+          "Standard_LRS",
+          "Standard_GRS",
+          "Premium_LRS"
+        ],
+        "defaultValue": "Standard_LRS"
+      },
+      "acrAdminUserEnabled": {
+        "type": "bool",
+        "defaultValue": false,
+        "metadata": {
+          "description": "Enable admin user that have push / pull permission to the registry."
+        }
+      }
+    },
+    "variables": {
+      "cleanUnique": "[toLower(replace(parameters('prefix'),'-', ''))]",
+      "storageAccountName": "[concat(variables('cleanUnique'), uniqueString(resourceGroup().id))]",
+      "registryName": "[concat(variables('cleanUnique'), uniqueString(resourceGroup().id))]",
+      "storageId": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+    },
+    "resources": [
+      {
+        "comments": "## Storage Account ##",
+        "name": "[variables('storageAccountName')]",
+        "type": "Microsoft.Storage/storageAccounts",
+        "apiVersion": "2016-01-01",
+        "location": "[resourceGroup().location]",
+        "tags": {
+          "displayName": "ACR Image's storage"
+        },
+        "kind": "Storage",
+        "sku": {
+          "name": "[parameters('storageAccountType')]",
+          "tier": "Standard"
+        },
+        "properties": {
+          "encryption": {
+            "keySource": "Microsoft.Storage",
+            "services": {
+              "blob": {
+                "enabled": true
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "[variables('registryName')]",
+        "type": "Microsoft.ContainerRegistry/registries",
+        "apiVersion": "2016-06-27-preview",
+        "location": "[resourceGroup().location]",
+        "comments": "Container registry for storing docker images",
+        "dependsOn": [
+          "[variables('storageId')]"
+        ],
+        "tags": {
+          "displayName": "Container Registry",
+          "container.registry": "[variables('registryName')]"
+        },
+        "properties": {
+          "adminUserEnabled": "[parameters('acrAdminUserEnabled')]",
+          "storageAccount": {
+            "accessKey": "[listKeys(variables('storageId'),'2015-06-15').key1]",
+            "name": "[variables('storageAccountName')]"
+          }
+        }
+      }  
+    ],
+    "outputs": {
+      "storageAccount": {
+        "type": "object",
+        "value": {
+          "id": "[variables('storageId')]",
+          "name": "[variables('storageAccountName')]",
+          "key": "[listKeys(variables('storageId'), '2016-01-01').keys[0].value]"
+        }
+      },
+      "containerRegistry": {
+        "type": "string",
+        "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries',variables('registryName')),'2016-06-27-preview').loginServer]"
+      }
+    }
+  }
