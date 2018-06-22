@@ -77,8 +77,6 @@ az group deployment create --resource-group ${ResourceGroup} --template-file dep
 
 az group deployment create --resource-group ${ResourceGroup} --template-file deploy.json `
     --parameters deploy.parameters.json
-
-
 ```
 
 ## Validate and test
