@@ -9,9 +9,14 @@
         "description": "Container Group name."
       }
     },
-    "registryName": {
+    "registry": {
       "type": "string",
-      "defaultValue": "aci-demo",
+      "metadata": {
+        "description": "Registry Server"
+      }
+    },
+    "registryUser": {
+      "type": "string",
       "metadata": {
         "description": "Registry Name"
       }
@@ -25,9 +30,9 @@
   },
   "variables": {
     "container1name": "aci-helloworld",
-    "container1image": "[concat(parameters('registryName'), '/aci-helloworld:latest')]",
+    "container1image": "[concat(parameters('registry'), '/aci-helloworld:latest')]",
     "container2name": "aci-sidecar",
-    "container2image": "[concat(parameters('registryName'), '/aci-sidecar:latest')]"
+    "container2image": "[concat(parameters('registry'), '/aci-sidecar:latest')]"
   },
   "resources": [
     {
@@ -90,8 +95,8 @@
         },
         "imageRegistryCredentials": [
           {
-            "server": "[parameters('registryName')]",
-            "username": "[parameters('registryName')]",
+            "server": "[parameters('registry')]",
+            "username": "[parameters('registryUser')]",
             "password": "[parameters('registryKey')]"
           }
         ]
