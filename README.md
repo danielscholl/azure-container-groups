@@ -6,23 +6,12 @@ __Deploy a Container Registry__
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
-### Manually deploy via CLI
-
-```bash
-# Create Resource Group
-ResourceGroup="aci-demo"
-Location="eastus"
-Registry="acidemo"
-
-az group create --name ${ResourceGroup} --location ${Location}
-az acr create --name ${Registry} --resource-group ${ResourceGroup} --location ${Location} --sku Standard
-```
-
 
 __Build and publish the Images to a private registry__
 
 ```bash
 docker-compose build
+$ResourceGroup="aci-demo"
 az acr login --name $(az acr list -g ${ResourceGroup} --query [].name -otsv)
 
 REGISTRY=$(az acr list -g ${ResourceGroup} --query [].loginServer -otsv)
