@@ -8,13 +8,20 @@
         "metadata": {
           "description": "Container Group name."
         }
+      },
+      "registryName": {
+          "type": "string",
+          "defaultValue": "danielscholl",
+          "metadata": {
+              "description": "Registry Name"
+          }
       }
     },
     "variables": {
-      "container1name": "aci-tutorial-app",
-      "container1image": "microsoft/aci-helloworld:latest",
-      "container2name": "aci-tutorial-sidecar",
-      "container2image": "microsoft/aci-tutorial-sidecar"
+      "container1name": "aci-helloworld",
+      "container1image": "[concat(parameters('registryName'), '/aci-helloworld:latest')]",
+      "container2name": "aci-sidecar",
+      "container2image": "[concat(parameters('registryName'), '/aci-sidecar:latest')]"
     },
     "resources": [
       {
