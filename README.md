@@ -19,6 +19,9 @@ docker tag danielscholl/aci-helloworld $REGISTRY/aci-helloworld
 docker tag danielscholl/aci-sidecar $REGISTRY/aci-sidecar
 docker push $REGISTRY/aci-helloworld
 docker push $REGISTRY/aci-sidecar
+
+# Get Credentials
+az acr credential show -g ${ResourceGroup} -n $(az acr list -g ${ResourceGroup} --query [].name -otsv) --query passwords[0].value -otsv
 ```
 
 

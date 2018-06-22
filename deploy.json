@@ -11,32 +11,13 @@
     },
     "registryName": {
       "type": "string",
-      "defaultValue": "danielscholl",
+      "defaultValue": "aci-demo",
       "metadata": {
         "description": "Registry Name"
       }
     },
-    "userCredentials": {
-      "type": "string",
-      "defaultValue": "No",
-      "allowedValues": [
-          "Yes",
-          "No"
-      ],
-      "metadata": {
-          "description": "Select whether an image should be used to create resource."
-      }
-    },
-    "userName": {
-      "type": "string",
-      "defaultValue": "azureUser",
-      "metadata": {
-        "description": "Registry User Name"
-      }
-    },
-    "userPassword": {
+    "registryKey": {
       "type": "securestring",
-      "defaultValue": "azurePassword@123",
       "metadata": {
         "description": "Registry User Password"
       }
@@ -109,9 +90,9 @@
         },
         "imageRegistryCredentials": [
           {
-            "server": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('registryName'),json('null'))]",
-            "username": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('userName'),json('null'))]",
-            "password": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('userPassword'),json('null'))]"
+            "server": "[parameters('registryName')]",
+            "username": "[parameters('registryName')]",
+            "password": "[parameters('registryKey')]"
           }
         ]
       }
