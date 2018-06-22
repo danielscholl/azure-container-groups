@@ -1,13 +1,18 @@
 # Azure Container Group Sample
 
-__Deploy a Container Registry__
+## Deploy a Container Registry
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdanielscholl%2Fazure-container-groups%2Fmaster%2Fregistry.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
+```powershell
+$ResourceGroup="aci-demo"
+az group create --name $ResourceGroup --Location eastus
+az group deployment create --resource-group ${ResourceGroup} --template-file registry.json
+```
 
-__Build and publish the Images to a private registry__
+## Build and Push Images
 
 ```powershell
 docker-compose build
@@ -20,14 +25,7 @@ docker tag danielscholl/aci-sidecar $REGISTRY/aci-sidecar
 docker push $REGISTRY/aci-helloworld
 docker push $REGISTRY/aci-sidecar
 
-# Registry Credentials
-$USERNAME=$(az acr credential show -g ${ResourceGroup} -n $(az acr list -g ${ResourceGroup} --query [].name -otsv) --query username -otsv)
-$PASSWORD=$(az acr credential show -g ${ResourceGroup} -n $(az acr list -g ${ResourceGroup} --query [].name -otsv) --query passwords[0].value -otsv)
-
-Write-Host "${REGISTRY}  ${USERNAME}  ${PASSWORD}"
-
 ```
-
 
 __Deploy a container group__
 
@@ -35,23 +33,26 @@ __Deploy a container group__
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
+```powershell
+# Registry Credentials
+$REGISTRY=$(az acr list -g ${ResourceGroup} --query [].loginServer -otsv)
+$REGISTRY_USER=$(az acr credential show -g ${ResourceGroup} `
+    -n $(az acr list -g ${ResourceGroup} --query [].name -otsv) --query username -otsv)
+$REGISTRY_KEY=$(az acr credential show -g ${ResourceGroup} `
+    -n $(az acr list -g ${ResourceGroup} --query [].name -otsv) --query passwords[0].value -otsv)
+
+
+az group deployment create --resource-group ${ResourceGroup} --template-file registry.json `
+    -registry $REGISTRY -registryUser $REGISTRY_USER -registryKey $REGISTRY_KEY
+```
 
 __Validate and test__
 
 ```powershell
-$ContainerGroup="mycontainergroup"
-
 # Grab the IP Address
-$IP=$(az container show --resource-group $ResourceGroup --name $ContainerGroup --query ipAddress.ip -otsv)
+$IP=$(az container show --resource-group $ResourceGroup --name aci-demo --query ipAddress.ip -otsv)
 start http://$IP
 
 # Monitor the side car logs
-az container logs --resource-group $ResourceGroup --name $ContainerGroup --container-name aci-sidecar
-```
-
-```bash
-# Manually Deploy --  Change the deploy.json to
-az group deployment create --resource-group ${ResourceGroup} --template-file deploy.json
-az container create --resource-group ${ResourceGroup} --name myContainerGroup --f deploy.yaml
-
+az container logs --resource-group $ResourceGroup --name aci-demo --container-name aci-sidecar
 ```

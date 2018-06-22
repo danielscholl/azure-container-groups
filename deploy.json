@@ -6,13 +6,13 @@
       "type": "string",
       "defaultValue": "aci-demo",
       "metadata": {
-        "description": "Container Group name."
+        "description": "Container Group."
       }
     },
     "registry": {
       "type": "string",
       "metadata": {
-        "description": "Registry Server"
+        "description": "Registry Server."
       }
     },
     "registryUser": {
