@@ -7,6 +7,7 @@
 </a>
 
 ```powershell
+# Deploy the Azure Container Registry
 $ResourceGroup="aci-demo"
 az group create --name $ResourceGroup --Location eastus
 az group deployment create --resource-group ${ResourceGroup} --template-file registry.json
@@ -15,10 +16,14 @@ az group deployment create --resource-group ${ResourceGroup} --template-file reg
 ## Build and Push Images
 
 ```powershell
+# Build the Appliation Docker Images
 docker-compose build
+
+# Login to the Container Registry
 $ResourceGroup="aci-demo"
 az acr login --name $(az acr list -g ${ResourceGroup} --query [].name -otsv)
 
+# Tag the Images and push to the Container Registry
 $REGISTRY=$(az acr list -g ${ResourceGroup} --query [].loginServer -otsv)
 docker tag danielscholl/aci-helloworld $REGISTRY/aci-helloworld
 docker tag danielscholl/aci-sidecar $REGISTRY/aci-sidecar
@@ -34,14 +39,14 @@ docker push $REGISTRY/aci-sidecar
 </a>
 
 ```powershell
-# Registry Credentials
+# Retrieve Registry Information
 $REGISTRY=$(az acr list -g ${ResourceGroup} --query [].loginServer -otsv)
 $REGISTRY_USER=$(az acr credential show -g ${ResourceGroup} `
     -n $(az acr list -g ${ResourceGroup} --query [].name -otsv) --query username -otsv)
 $REGISTRY_KEY=$(az acr credential show -g ${ResourceGroup} `
     -n $(az acr list -g ${ResourceGroup} --query [].name -otsv) --query passwords[0].value -otsv)
 
-
+# Deploy the Azure Container Group
 az group deployment create --resource-group ${ResourceGroup} --template-file registry.json `
     -registry $REGISTRY -registryUser $REGISTRY_USER -registryKey $REGISTRY_KEY
 ```
@@ -49,8 +54,10 @@ az group deployment create --resource-group ${ResourceGroup} --template-file reg
 ## Validate and test
 
 ```powershell
-# Grab the IP Address
+# Retrieve the IP Address of the Container Group
 $IP=$(az container show --resource-group $ResourceGroup --name aci-demo --query ipAddress.ip -otsv)
+
+# Open a browser
 start http://$IP
 
 # Monitor the side car logs
