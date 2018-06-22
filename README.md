@@ -13,9 +13,7 @@ cd azure-container-groups
 
 # Test Locally
 docker-compose up
-```
 
-```powershell
 # Deploy the Azure Container Registry
 $ResourceGroup="aci-demo"
 az group create --name $ResourceGroup --location eastus
@@ -56,8 +54,31 @@ $REGISTRY_KEY=$(az acr credential show -g ${ResourceGroup} `
     -n $(az acr list -g ${ResourceGroup} --query [].name -otsv) --query passwords[0].value -otsv)
 
 # Deploy the Azure Container Group
-az group deployment create --resource-group ${ResourceGroup} --template-file registry.json `
-    -registry $REGISTRY -registryUser $REGISTRY_USER -registryKey $REGISTRY_KEY
+az group deployment create --resource-group ${ResourceGroup} --template-file deploy.json `
+    --registry $REGISTRY --registryUser $REGISTRY_USER --registryKey $REGISTRY_KEY
+
+@"
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "registry": {
+      "value": "${REGISTRY}"
+    },
+    "registryUser": {
+      "value": "${REGISTRY_USER}"
+    },
+    "registryKey": {
+      "value": "${REGISTRY_KEY}"
+    }
+  }
+}
+"@ | Out-File "deploy.parameters.json"
+
+az group deployment create --resource-group ${ResourceGroup} --template-file deploy.json `
+    --parameters deploy.parameters.json
+
+
 ```
 
 ## Validate and test
