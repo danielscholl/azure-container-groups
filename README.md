@@ -2,10 +2,20 @@
 
 ## Getting Started
 
-1. __Create a Resource Group__
+1. __Create an Azure Container Registry__
 
 ```bash
-az group create --location southcentralus --name aci-demo
+# Create Resource Group
+ResourceGroup="aci-demo"
+Location="southcentralus"
+Registry="acidemo"
+
+az group create --name ${ResourceGroup} \
+    --location ${Location}
+az acr create --name ${Registry} \
+    --resource-group ${ResourceGroup} \
+    --location ${Location} \
+    --sku Standard 
 ```
 
 1. __Deploy Container Registry to Resource Group__
