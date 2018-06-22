@@ -27,7 +27,7 @@ docker push $REGISTRY/aci-sidecar
 
 ```
 
-__Deploy a container group__
+## Deploy a container group
 
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdanielscholl%2Fazure-container-groups%2Fmaster%2Fdeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
@@ -46,7 +46,7 @@ az group deployment create --resource-group ${ResourceGroup} --template-file reg
     -registry $REGISTRY -registryUser $REGISTRY_USER -registryKey $REGISTRY_KEY
 ```
 
-__Validate and test__
+## Validate and test
 
 ```powershell
 # Grab the IP Address
