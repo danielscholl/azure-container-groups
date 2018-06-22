@@ -74,14 +74,7 @@
                   "port": 8080
                 }
               ]
-            },
-            "imageRegistryCredentials": [
-              {
-                "server": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('registryName'),json('null'))]",
-                "username": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('userName'),json('null'))]",
-                "password": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('userPassword'),json('null'))]"
-              }
-            ]
+            }
           },
           {
             "name": "[variables('container2name')]",
@@ -113,7 +106,14 @@
               "port": 8080
             }
           ]
-        }
+        },
+        "imageRegistryCredentials": [
+          {
+            "server": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('registryName'),json('null'))]",
+            "username": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('userName'),json('null'))]",
+            "password": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('userPassword'),json('null'))]"
+          }
+        ]
       }
     }
   ],
