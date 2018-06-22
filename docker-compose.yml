@@ -3,13 +3,13 @@ version: "3.1"
 services:
   web:
     build: aci-helloworld
-    image: danielscholl/aci-helloworld
+    image: aci-helloworld
     ports:
       - "8080:80"
 
   sidecar:
     build: aci-sidecar
-    image: danielscholl/aci-sidecar
+    image: aci-sidecar
     environment:
       ENV_WEB_PORT: 8080
     links:

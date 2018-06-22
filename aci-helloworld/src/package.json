@@ -1,12 +1,17 @@
 {
-    "name": "aci-helloworld",
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
-    "dependencies": {
-      "express": "^4.14.0",
-      "morgan": "^1.8.2"
-    },
-    "devDependencies": {},
-    "author": ""
+  "name": "aci-helloworld",
+  "version": "1.0.0",
+  "description": "Simple Node App",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.14.0",
+    "morgan": "^1.8.2"
+  },
+  "devDependencies": {},
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielscholl/azure-container-groups.git"
   }
+}

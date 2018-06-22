@@ -1,32 +1,43 @@
 # Azure Container Group Sample
 
-## Getting Started
+__Deploy a Container Registry__
 
-1. __Create an Azure Container Registry__
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fdanielscholl%2Fazure-container-groups%2Fmaster%2Fregistry.json" target="_blank">
+    <img src="http://azuredeploy.net/deploybutton.png"/>
+</a>
+
+### Manually deploy via CLI
 
 ```bash
 # Create Resource Group
 ResourceGroup="aci-demo"
-Location="southcentralus"
+Location="eastus"
 Registry="acidemo"
 
-az group create --name ${ResourceGroup} \
-    --location ${Location}
-az acr create --name ${Registry} \
-    --resource-group ${ResourceGroup} \
-    --location ${Location} \
-    --sku Standard 
+az group create --name ${ResourceGroup} --location ${Location}
+az acr create --name ${Registry} --resource-group ${ResourceGroup} --location ${Location} --sku Standard
 ```
 
-1. __Deploy Container Registry to Resource Group__
+
+__Build and publish the Images to a private registry__
 
 ```bash
-az group deployment create --name iac-registry --template-file registry.json --resource-group aci-demo
+docker-compose build
+az acr login --name $(az acr list -g ${ResourceGroup} --query [].name -otsv)
+
+REGISTRY=$(az acr list -g ${ResourceGroup} --query [].loginServer -otsv)
+docker tag aci-helloworld $REGISTRY/aci-helloworld
+docker tag aci-sidecar $REGISTRY/aci-sidecar
+docker push $REGISTRY/aci-helloworld
+docker push $REGISTRY/aci-sidecar
 ```
 
-1.  __Login to Container Registry__
+
+__Deploy a container group__
 
 ```bash
-$REGISTRY=(az acr list -g aci-demo --query [].name -otsv)
-az acr login --name $REGISTRY
+
+az group deployment create --resource-group ${ResourceGroup} --template-file deploy.json
+az container create --resource-group ${ResourceGroup} --name myContainerGroup --f deploy.yaml
+
 ```
