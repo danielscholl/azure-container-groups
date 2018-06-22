@@ -7,9 +7,18 @@
 </a>
 
 ```powershell
+# Clone the repository
+git clone https://github.com/danielscholl/azure-container-groups.git
+cd azure-container-groups
+
+# Test Locally
+docker-compose up
+```
+
+```powershell
 # Deploy the Azure Container Registry
 $ResourceGroup="aci-demo"
-az group create --name $ResourceGroup --Location eastus
+az group create --name $ResourceGroup --location eastus
 az group deployment create --resource-group ${ResourceGroup} --template-file registry.json
 ```
 
