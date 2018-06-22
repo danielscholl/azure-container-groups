@@ -12,6 +12,7 @@ services:
     image: danielscholl/aci-sidecar
     environment:
       ENV_WEB_PORT: 8080
+      ENV_WEB_HOST: web
     links:
       - web
 

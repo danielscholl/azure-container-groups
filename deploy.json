@@ -1,90 +1,126 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-      "containerGroupName": {
-        "type": "string",
-        "defaultValue": "myContainerGroup",
-        "metadata": {
-          "description": "Container Group name."
-        }
-      },
-      "registryName": {
-          "type": "string",
-          "defaultValue": "danielscholl",
-          "metadata": {
-              "description": "Registry Name"
-          }
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "containerGroupName": {
+      "type": "string",
+      "defaultValue": "aci-demo",
+      "metadata": {
+        "description": "Container Group name."
       }
     },
-    "variables": {
-      "container1name": "aci-helloworld",
-      "container1image": "[concat(parameters('registryName'), '/aci-helloworld:latest')]",
-      "container2name": "aci-sidecar",
-      "container2image": "[concat(parameters('registryName'), '/aci-sidecar:latest')]"
+    "registryName": {
+      "type": "string",
+      "defaultValue": "danielscholl",
+      "metadata": {
+        "description": "Registry Name"
+      }
     },
-    "resources": [
-      {
-        "name": "[parameters('containerGroupName')]",
-        "type": "Microsoft.ContainerInstance/containerGroups",
-        "apiVersion": "2018-04-01",
-        "location": "[resourceGroup().location]",
-        "properties": {
-          "containers": [
-            {
-              "name": "[variables('container1name')]",
-              "properties": {
-                "image": "[variables('container1image')]",
-                "resources": {
-                  "requests": {
-                    "cpu": 1,
-                    "memoryInGB": 1.5
-                  }
+    "userCredentials": {
+      "type": "string",
+      "defaultValue": "No",
+      "allowedValues": [
+          "Yes",
+          "No"
+      ],
+      "metadata": {
+          "description": "Select whether an image should be used to create resource."
+      }
+    },
+    "userName": {
+      "type": "string",
+      "defaultValue": "azureUser",
+      "metadata": {
+        "description": "Registry User Name"
+      }
+    },
+    "userPassword": {
+      "type": "securestring",
+      "defaultValue": "azurePassword@123",
+      "metadata": {
+        "description": "Registry User Password"
+      }
+    }
+  },
+  "variables": {
+    "container1name": "aci-helloworld",
+    "container1image": "[concat(parameters('registryName'), '/aci-helloworld:latest')]",
+    "container2name": "aci-sidecar",
+    "container2image": "[concat(parameters('registryName'), '/aci-sidecar:latest')]"
+  },
+  "resources": [
+    {
+      "name": "[parameters('containerGroupName')]",
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2018-04-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "containers": [
+          {
+            "name": "[variables('container1name')]",
+            "properties": {
+              "image": "[variables('container1image')]",
+              "resources": {
+                "requests": {
+                  "cpu": 1,
+                  "memoryInGB": 1.5
+                }
+              },
+              "ports": [
+                {
+                  "port": 80
                 },
-                "ports": [
-                  {
-                    "port": 80
-                  },
-                  {
-                    "port": 8080
-                  }
-                ]
-              }
+                {
+                  "port": 8080
+                }
+              ]
             },
-            {
-              "name": "[variables('container2name')]",
-              "properties": {
-                "image": "[variables('container2image')]",
-                "resources": {
-                  "requests": {
-                    "cpu": 1,
-                    "memoryInGB": 1.5
-                  }
+            "imageRegistryCredentials": [
+              {
+                "server": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('registryName'),json('null'))]",
+                "username": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('userName'),json('null'))]",
+                "password": "[if(equals(parameters('userCredentials'), 'Yes'), parameters('userPassword'),json('null'))]"
+              }
+            ]
+          },
+          {
+            "name": "[variables('container2name')]",
+            "properties": {
+              "image": "[variables('container2image')]",
+              "environmentVariables": [
+                {  "name": "WEB_HOST", "value":"localhost"},
+                {  "name": "WEB_PORT", "value":"80"}
+              ],
+              "resources": {
+                "requests": {
+                  "cpu": 1,
+                  "memoryInGB": 1.5
                 }
               }
             }
-          ],
-          "osType": "Linux",
-          "ipAddress": {
-            "type": "Public",
-            "ports": [
-              {
-                "protocol": "TCP",
-                "port": 80
-              },
-              {
-                  "protocol": "TCP",
-                  "port": 8080
-              }
-            ]
           }
+        ],
+        "osType": "Linux",
+        "ipAddress": {
+          "type": "Public",
+          "ports": [
+            {
+              "protocol": "TCP",
+              "port": 80
+            },
+            {
+              "protocol": "TCP",
+              "port": 8080
+            }
+          ]
         }
       }
-    ],
-    "outputs": {
-      "containerIPv4Address": {
-        "type": "string",
-        "value": "[reference(resourceId('Microsoft.ContainerInstance/containerGroups/', parameters('containerGroupName'))).ipAddress.ip]"
-      }
+    }
+  ],
+  "outputs": {
+    "containerIPv4Address": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ContainerInstance/containerGroups/', parameters('containerGroupName'))).ipAddress.ip]"
     }
   }
+}
