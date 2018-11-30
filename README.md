@@ -15,8 +15,8 @@ cd azure-container-groups
 docker-compose up
 
 # Deploy the Azure Container Registry
-$ResourceGroup="aci-demo"
-az group create --name $ResourceGroup --location eastus
+$ResourceGroup="demo-aci"
+az group create --name $ResourceGroup --location westus
 az group deployment create --resource-group ${ResourceGroup} --template-file registry.json
 ```
 
@@ -27,7 +27,7 @@ az group deployment create --resource-group ${ResourceGroup} --template-file reg
 docker-compose build
 
 # Login to the Container Registry
-$ResourceGroup="aci-demo"
+$ResourceGroup="demo-aci"
 az acr login --name $(az acr list -g ${ResourceGroup} --query [].name -otsv)
 
 # Tag the Images and push to the Container Registry
@@ -53,10 +53,7 @@ $REGISTRY_USER=$(az acr credential show -g ${ResourceGroup} `
 $REGISTRY_KEY=$(az acr credential show -g ${ResourceGroup} `
     -n $(az acr list -g ${ResourceGroup} --query [].name -otsv) --query passwords[0].value -otsv)
 
-# Deploy the Azure Container Group
-az group deployment create --resource-group ${ResourceGroup} --template-file deploy.json `
-    --registry $REGISTRY --registryUser $REGISTRY_USER --registryKey $REGISTRY_KEY
-
+# Create Parameters via PowerShell
 @"
 {
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
@@ -75,7 +72,31 @@ az group deployment create --resource-group ${ResourceGroup} --template-file dep
 }
 "@ | Out-File "deploy.parameters.json"
 
+# Create Parameters via bash
+cat > deploy.parameters.json <<EOF
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "registry": {
+      "value": "${REGISTRY}"
+    },
+    "registryUser": {
+      "value": "${REGISTRY_USER}"
+    },
+    "registryKey": {
+      "value": "${REGISTRY_KEY}"
+    }
+  }
+}
+EOF
+
+# Deploy on Public Network
 az group deployment create --resource-group ${ResourceGroup} --template-file deploy.json `
+    --parameters deploy.parameters.json
+
+# Deploy on Private VNET
+az group deployment create --resource-group ${ResourceGroup} --template-file deploy_on_network.json `
     --parameters deploy.parameters.json
 ```
 
@@ -90,4 +111,34 @@ start http://$IP
 
 # Monitor the side car logs
 az container logs --resource-group $ResourceGroup --name aci-demo --container-name aci-sidecar
+```
+
+
+## Delete
+> Note: ACI Network integration is in preview and you have to remove it manually.
+
+```powershell
+# Replace <my-resource-group> with the name of your resource group
+
+
+# Get network profile ID
+NETWORK_PROFILE_ID=$(az network profile list --resource-group $ResourceGroup --query [0].id --output tsv)
+
+# Delete the network profile
+az network profile delete --id $NETWORK_PROFILE_ID -y
+
+# Get the service association link (SAL) ID
+SAL_ID=$(az network vnet subnet show --resource-group $ResourceGroup --vnet-name aci-vnet --name aci-subnet --query id --output tsv)/providers/Microsoft.ContainerInstance/serviceAssociationLinks/default
+
+# Delete the default SAL ID for the subnet
+az resource delete --ids $SAL_ID --api-version 2018-08-01
+
+# Delete the subnet delegation to Azure Container Instances
+az network vnet subnet update --resource-group $ResourceGroup --vnet-name aci-vnet --name aci-subnet --remove delegations 0
+
+# Delete the subnet
+az network vnet subnet delete --resource-group $ResourceGroup --vnet-name aci-vnet --name aci-subnet
+
+# Delete virtual network
+az network vnet delete --resource-group $ResourceGroup --name aci-vnet
 ```
